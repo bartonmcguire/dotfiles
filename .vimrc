@@ -22,6 +22,9 @@ Bundle 'scrooloose/nerdcommenter'
 Bundle 'tpope/vim-eunuch'
 Bundle 'br3tt/vim-slim'
 Bundle 'Lokaltog/vim-powerline'
+Bundle 'tsaleh/vim-supertab'
+Bundle 'duff/vim-bufonly'
+"Bundle 'scrooloose/nerdtree'
 
 """""""""""""""""""""""""""""""""""""""""""""""
 
@@ -37,7 +40,6 @@ set encoding=utf-8  " set default encoding to UTF-8
 
 set visualbell  " don't beep
 
-set guifont=Inconsolata-g:h13
 set guioptions-=T
 
 set nowrap  " don't wrap lines
@@ -53,17 +55,6 @@ set listchars=tab:\ \  " a tab should display as "  "
 set listchars+=trail:·  " show trailing spaces as dots
 set listchars+=extends:>  " The character to show in the last column when wrap is off and the line continues beyond the right of the screen
 set listchars+=precedes:<  " The character to show in the last column when wrap is off and the line continues beyond the right of the screen
-
-" Disable arrow keys:
-" This hurts me more than it hurts you.
-map <up> <nop>
-map <down> <nop>
-map <left> <nop>
-map <right> <nop>
-imap <up> <nop>
-imap <down> <nop>
-imap <left> <nop>
-imap <right> <nop>
 
 au BufWritePre * :%s/\s\+$//e "remove trailing whitespace
 
@@ -82,6 +73,7 @@ set wildignore+=*.zip,*.tar.gz,*.tar.bz2,*.rar,*.tar.xz  " disable archive files
 set wildignore+=*/vendor/gems/*,*/vendor/cache/*,*/.bundle/*,*/.sass-cache/*  " ignore bundler and sass cache
 set wildignore+=*.swp,*~,._*  " disable temp and backup files
 set wildignore+=*/public/* "disable public files
+set wildignore+=*/tmp/* "disable public files
 
 " backup and swap files
 set backupdir=~/.vim/_backup//  " where to put backup files
@@ -155,6 +147,8 @@ map <Leader><Leader> :CtrlPMRU<CR>
 
 """""""""""""""""""""""""""""""""""""""""""""""
 
+set guifont=Monaco:h15
+
 fun! OpenSpec()
   let fp = expand('%')
   if match(fp, 'app/', 0) != -1
@@ -170,3 +164,5 @@ endfun
 command Spec call OpenSpec()
 
 let g:Powerline_stl_path_style = 'short'
+
+au BufNewFile,BufRead *.hamlbars set ft=haml  " treat hamlbars files like haml
