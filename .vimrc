@@ -4,27 +4,28 @@ filetype off  " required
 """""""""""""""""""""""""""""""""""""""""""""""
 " vundle
 """""""""""""""""""""""""""""""""""""""""""""""
-set rtp+=~/.vim/bundle/vundle/
-call vundle#rc()
+set rtp+=~/.vim/bundle/Vundle.vim
+call vundle#begin()
 
-Bundle 'gmarik/vundle'
-Bundle 'kchmck/vim-coffee-script'
-Bundle 'flazz/vim-colorschemes'
-Bundle 'molokai'
-Bundle 'ctrlp.vim'
-Bundle 'Lokaltog/vim-powerline'
-Bundle 'scrooloose/syntastic'
-Bundle 'tpope/vim-fugitive'
-Bundle 'tpope/vim-rails'
-Bundle 'nono/vim-handlebars'
-Bundle 'mileszs/ack.vim'
-Bundle 'scrooloose/nerdcommenter'
-Bundle 'tpope/vim-eunuch'
-Bundle 'br3tt/vim-slim'
-Bundle 'Lokaltog/vim-powerline'
-Bundle 'tsaleh/vim-supertab'
-Bundle 'duff/vim-bufonly'
-"Bundle 'scrooloose/nerdtree'
+Plugin 'gmarik/Vundle.vim'
+Plugin 'kchmck/vim-coffee-script'
+Plugin 'flazz/vim-colorschemes'
+Plugin 'molokai'
+Plugin 'ctrlp.vim'
+Plugin 'Lokaltog/vim-powerline'
+Plugin 'scrooloose/syntastic'
+Plugin 'tpope/vim-fugitive'
+Plugin 'tpope/vim-rails'
+Plugin 'nono/vim-handlebars'
+Plugin 'mileszs/ack.vim'
+Plugin 'scrooloose/nerdcommenter'
+Plugin 'tpope/vim-eunuch'
+Plugin 'bkad/CamelCaseMotion'
+Plugin 'ervandew/supertab'
+Plugin 'digitaltoad/vim-jade'
+Plugin 'duff/vim-bufonly'
+
+call vundle#end()
 
 """""""""""""""""""""""""""""""""""""""""""""""
 
@@ -32,6 +33,7 @@ syntax on  " turn on syntax highlighting
 filetype plugin indent on
 
 colorscheme desert256
+set guifont=Monaco:h15
 
 set t_Co=256 " 256 colors
 set number  " show line numbers
@@ -56,8 +58,6 @@ set listchars+=trail:·  " show trailing spaces as dots
 set listchars+=extends:>  " The character to show in the last column when wrap is off and the line continues beyond the right of the screen
 set listchars+=precedes:<  " The character to show in the last column when wrap is off and the line continues beyond the right of the screen
 
-au BufWritePre * :%s/\s\+$//e "remove trailing whitespace
-
 " searching
 set hlsearch  " highlight matches
 set incsearch  " incremental searching
@@ -71,9 +71,9 @@ set hidden
 set wildignore+=*.o,*.out,*.obj,.git,*.rbc,*.class,.svn,*.gem  " disable output and VCS files
 set wildignore+=*.zip,*.tar.gz,*.tar.bz2,*.rar,*.tar.xz  " disable archive files
 set wildignore+=*/vendor/gems/*,*/vendor/cache/*,*/.bundle/*,*/.sass-cache/*  " ignore bundler and sass cache
+set wildignore+=*/public/system/*  " ignore assets
 set wildignore+=*.swp,*~,._*  " disable temp and backup files
-set wildignore+=*/public/* "disable public files
-set wildignore+=*/tmp/* "disable public files
+set wildignore+=*.meta  " ignore .meta files for Unity3D
 
 " backup and swap files
 set backupdir=~/.vim/_backup//  " where to put backup files
@@ -84,10 +84,9 @@ set laststatus=2  " always show the status bar
 
 " autocommands
 au BufNewFile,BufRead *.json set ft=javascript  " treat JSON files like JavaScript
+au BufNewFile,BufRead *.json.txt set ft=javascript  " treat JSON files like JavaScript
 au VimResized * wincmd =  " resize splits when window size changes
-
-" delete line at number without moving cursor with :#D ex- :89D
-command! -range -nargs=0 D <line1>,<line2>d|norm ``
+au BufWritePre * :%s/\s\+$//e  " remove trailing whitespace on save
 
 " leader is <space>
 let mapleader=" "
@@ -102,37 +101,33 @@ map <Leader>l <C-w>l
 map <Leader>/ <plug>NERDCommenterToggle
 map <Leader>\ <plug>NERDCommenterToggle
 
-" find merge conflict markers
-nmap <silent> <leader>fc <ESC>/\v^[<=>]{7}( .*\|$)<CR>
-
-" adjust viewports to the same size
-map <Leader>= <C-w>=
-
 " start a :e at the directory of the current open file
 cnoremap %% <C-R>=expand('%:h').'/'<CR>
-map <leader>e :e %%
+map <leader>ew :e %%
 map <leader>es :sp %%
 map <leader>ev :vsp %%
 
-" easy splitting
-map <leader>s :split <CR> <C-w>j
-map <leader>v :vsplit <CR> <C-w>l
+" insert the current directory into a command-line path
+cmap <C-P> <C-R>=expand("%:p:h") . "/"<CR>
 
-" search using ack
-map <Leader>f :Ack!<space>
+" adjust viewports to the same size
+map <Leader>= <C-w>=
 
 " keep visual selection when indenting or outdenting
 vmap <Tab> >gv
 vmap <S-Tab> <gv
 
+" search using ack
+map <leader>f :Ack!<space>
+" search for the term under the cursor
+nmap <C-S-f> :let @/="\\<<C-R><C-W>\\>"<CR>:set hls<CR>:silent Ack! "<C-R><C-W>"<CR>;
+" search for the highlighted term
+vmap <C-S-f> y:let @/=escape(@", '\\[]$^*.')<CR>:set hls<CR>:silent Ack! "<C-R>=escape(@", '\\"#')<CR>"<CR>;
+" close the quickfix window
+map <leader>q :ccl<CR>
+
 " remove highlighted term
-nnoremap <silent> <Leader>n :nohlsearch<CR>
-
-" git status
-map <leader>gs :Gstatus <CR>
-
-" quick quit
-map <leader>q :q <CR>
+nnoremap <silent> <Leader>* :nohlsearch<CR>
 
 imap <C-Tab> <C-p>
 
@@ -142,27 +137,34 @@ imap <C-Tab> <C-p>
 " reverse results
 let g:ctrlp_match_window_reversed = 0
 
+" more results
+let g:ctrlp_max_height = 20
+
+" clear cache inside ctrl-p
+let g:ctrlp_prompt_mappings = {'PrtClearCache()': ['<c-s-r>']}
+
+" use the cwd as the path for ctrl-p (default is to use the nearest ancestor
+" path that contains a .git directory)
+let g:ctrlp_working_path_mode = 'a'
+
 " view most recently used files
 map <Leader><Leader> :CtrlPMRU<CR>
 
+let g:ctrlp_custom_ignore = 'node_modules\|DS_Store\|git'
+
 """""""""""""""""""""""""""""""""""""""""""""""
 
-set guifont=Monaco:h15
+"""""""""""""""""""""""""""""""""""""""""""""""
+" nerd commenter
+"""""""""""""""""""""""""""""""""""""""""""""""
+" toggle comments
+map <Leader>/ <plug>NERDCommenterToggle
 
-fun! OpenSpec()
-  let fp = expand('%')
-  if match(fp, 'app/', 0) != -1
-    let fp = substitute(fp, 'app/', 'spec/', '')
-    let fp = substitute(fp, '.rb', '_spec.rb', '')
-  else
-    let fp = substitute(fp, 'spec/', 'app/', '')
-    let fp = substitute(fp, '_spec.rb', '.rb', '')
-  endif
-  exec 'vs '. fp
-endfun
+"""""""""""""""""""""""""""""""""""""""""""""""
 
-command Spec call OpenSpec()
+map <silent> <Leader>w <Plug>CamelCaseMotion_w
+map <silent> <Leader>b <Plug>CamelCaseMotion_b
+map <silent> <Leader>e <Plug>CamelCaseMotion_e
+let g:SuperTabDefaultCompletionType = 'context'
 
 let g:Powerline_stl_path_style = 'short'
-
-au BufNewFile,BufRead *.hamlbars set ft=haml  " treat hamlbars files like haml
